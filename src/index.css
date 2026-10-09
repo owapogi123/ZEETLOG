@@ -1,0 +1,21 @@
+/* Google Fonts: Playfair Display for headings, Inter for body text */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Inter:wght@300;400;500;600&display=swap');
+@import "tailwindcss";
+
+/* Custom theme values, usable as font-serif, bg-cream, etc. */
+@theme {
+  --font-serif: 'Playfair Display', serif;
+  --font-sans: 'Inter', sans-serif;
+  --color-cream: #fff8f3;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-cream);
+  color: #44403c;
+  font-family: var(--font-sans);
+}
