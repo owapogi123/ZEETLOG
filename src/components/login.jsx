@@ -11,7 +11,7 @@ const ACCEPTED_NAMES = ['Zeetlog']
 // Small label shown above the title
 const eyebrow = 'Private entrance'
 const title = 'Hold on a second'
-const subtitle = 'PUT THE NICKNAME THAT I MADE U'
+const subtitle = 'PUT THE NICKNAME THAT I MADE FOR YOU'
 const placeholder = 'Your nickname'
 const buttonText = 'ENTER'
 

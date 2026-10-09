@@ -61,46 +61,34 @@ const petalColors = ['#dd959b', '#e9b3b8', '#f0c4c8', '#c9777f', '#abcbe8']
 const script = { fontFamily: "'Great Vibes', 'Snell Roundhand', cursive" }
 const body = { fontFamily: "'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif" }
 
-/* ---------- Page styles that need media queries ---------- */
+const FONT_LINK =
+  'https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;400;500;600&display=swap'
 
-// On wide screens the letter is a two-page spread with a soft fold in the middle.
-// On phones the two pages stack into one.
-const css = `
-@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;400;500;600&display=swap');
+/* ---------- Helpers ---------- */
 
-.love-spread {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr;
-  width: min(94vw, 60rem);
-  max-height: 76svh;
-  overflow-y: auto;
-  border-radius: 10px;
-  background: linear-gradient(160deg, #fffaf0 0%, #f8f0e3 100%);
-  box-shadow:
-    inset 0 0 0 10px #f8f0e3,
-    inset 0 0 0 11px rgba(221, 149, 155, 0.55),
-    0 40px 80px -30px rgba(35, 56, 104, 0.5);
+// Loads the Google fonts once
+function useFonts() {
+  useEffect(() => {
+    if (document.querySelector(`link[href="${FONT_LINK}"]`)) return
+    const link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = FONT_LINK
+    document.head.appendChild(link)
+  }, [])
 }
-.love-page {
-  padding: clamp(28px, 4.5vw, 54px);
-  text-align: left;
+
+// true on wide screens (two-page spread), false on phones (pages stack into one)
+function useIsWide() {
+  const [wide, setWide] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 760)
+
+  useEffect(() => {
+    const handleResize = () => setWide(window.innerWidth >= 760)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  return wide
 }
-.love-page + .love-page {
-  border-top: 1px dashed rgba(221, 149, 155, 0.55);
-}
-@media (min-width: 760px) {
-  .love-spread {
-    grid-template-columns: 1fr 1fr;
-    background:
-      linear-gradient(90deg, rgba(35,56,104,0) 45%, rgba(35,56,104,0.09) 50%, rgba(35,56,104,0) 55%),
-      linear-gradient(160deg, #fffaf0 0%, #f8f0e3 100%);
-  }
-  .love-page + .love-page {
-    border-top: none;
-  }
-}
-`
 
 /* ---------- Small pieces ---------- */
 
@@ -200,6 +188,8 @@ function HeartDivider() {
 function Envelope({ onOpenLibrary }) {
   const reduce = useReducedMotion()
   const timerRef = useRef(null)
+  const wide = useIsWide()
+  useFonts()
 
   // stage: 'closed' (envelope waiting) -> 'opening' (flap + letter rising) -> 'letter' (full spread)
   const [stage, setStage] = useState('closed')
@@ -273,11 +263,41 @@ function Envelope({ onOpenLibrary }) {
 
   const paragraphStyle = {
     margin: '0 0 14px',
-    fontSize: 'clamp(0.8rem, 1.35vw, 0.93rem)',
+    fontSize: 'clamp(0.85rem, 1.35vw, 0.93rem)',
     fontWeight: 400,
     lineHeight: 1.85,
     color: soft.navyText,
   }
+
+  // The open letter: a two-page spread on wide screens, one tall page on phones.
+  // It grows to fit all the text, so nothing gets cut off or overlapped.
+  const spread = {
+    position: 'relative',
+    display: 'grid',
+    gridTemplateColumns: wide ? '1fr 1fr' : '1fr',
+    width: 'min(94vw, 60rem)',
+    boxSizing: 'border-box',
+    borderRadius: 10,
+    textAlign: 'left',
+    background: wide
+      ? 'linear-gradient(90deg, rgba(35,56,104,0) 45%, rgba(35,56,104,0.09) 50%, rgba(35,56,104,0) 55%), linear-gradient(160deg, #fffaf0 0%, #f8f0e3 100%)'
+      : 'linear-gradient(160deg, #fffaf0 0%, #f8f0e3 100%)',
+    boxShadow: [
+      'inset 0 0 0 10px #f8f0e3',
+      'inset 0 0 0 11px rgba(221, 149, 155, 0.55)',
+      '0 40px 80px -30px rgba(35, 56, 104, 0.5)',
+    ].join(', '),
+  }
+
+  const pageStyle = (isSecond) => ({
+    padding: wide ? 'clamp(28px, 4.5vw, 54px)' : '34px 28px',
+    boxSizing: 'border-box',
+    textAlign: 'left',
+    // On phones a dashed line separates the two halves
+    borderTop: isSecond && !wide ? '1px dashed rgba(221, 149, 155, 0.55)' : 'none',
+    // Keeps the second half clear of the inner frame line
+    marginTop: isSecond && !wide ? 0 : undefined,
+  })
 
   return (
     <section
@@ -303,8 +323,6 @@ function Envelope({ onOpenLibrary }) {
         ].join(', '),
       }}
     >
-      <style>{css}</style>
-
       {!reduce && <Petals count={petalCount} />}
 
       {/* Warm glow in the middle, like candlelight. It breathes slowly and brightens when opened */}
@@ -555,7 +573,7 @@ function Envelope({ onOpenLibrary }) {
               </motion.div>
             </motion.div>
           ) : (
-            /* ---------- STAGE 3: the open letter (landscape two-page spread) ---------- */
+            /* ---------- STAGE 3: the open letter (two-page spread, one page on phones) ---------- */
             <motion.div
               key="letter"
               initial={reduce ? false : { opacity: 0, scale: 0.9, y: 40 }}
@@ -563,9 +581,9 @@ function Envelope({ onOpenLibrary }) {
               transition={{ duration: t(1), ease: [0.22, 1, 0.36, 1] }}
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}
             >
-              <div className="love-spread">
+              <div style={spread}>
                 {/* LEFT PAGE: title + first paragraphs */}
-                <div className="love-page">
+                <div style={pageStyle(false)}>
                   <h2
                     style={{ ...script, margin: 0, fontSize: 'clamp(2.6rem, 6vw, 3.6rem)', lineHeight: 1.1, color: colors.navy }}
                     aria-label={letterTitle}
@@ -595,7 +613,7 @@ function Envelope({ onOpenLibrary }) {
                 </div>
 
                 {/* RIGHT PAGE: the rest of the paragraphs + signature */}
-                <div className="love-page">
+                <div style={pageStyle(true)}>
                   <div>
                     {rightParagraphs.map((p, i) => (
                       <motion.p key={i} style={paragraphStyle} {...reveal(leftParagraphs.length + i + 1)}>

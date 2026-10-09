@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from "react";
 
 // ✏️ EDIT YOUR LETTER HERE
 const letter = {
-  from: "Me",
-  to: "You",
-  greeting: "Dear You,",
+  from: "Josh",
+  to: "Zee",
+  greeting: "Dear Zeetlog,",
   paragraphs: [
     "Finally, you made it here. I'm really glad you took the time to explore everything i've prepared for you. this will be the last thing you'll see on this website and i guess this is where i'll finally tell you what i've been wanting to say.",
     "Do you still remember the first time we talked at the Camp with berto? There were only three of us there. I remember finding you interesting from the very beginning, Do you know why? it was your voice. the moment i heard it. i remember thinking, Wow, her voice is cute. i could listen to her talk all day. And when you sent me your first message, i was genuinely happy. Looking back, I'm glad i got to share and capture some moments with you, because those little things became memories that i genuinely treasure. ",
@@ -15,11 +15,11 @@ const letter = {
   name: "Josh",
   date: "Now",
   validFor: "Hangga't hindi ka nag n-no",
-  ps: "IM CRYING GAGU, I MISS U ZEE, CALL ME IF U SEE THIS.",
+  ps: "Can i pursue you? if yes, say good morning to me tomorrow, if not leave it as is.",
 };
 
 // 📷 Your photo: a path from /public like "/images/us.jpg". Leave "" for the placeholder.
-const photo = "";
+const photo = "/images/LASTIMAGE.png";
 
 // 🎨 Palette
 const sky = "#A9C8E6";
@@ -28,17 +28,42 @@ const cream = "#F6EEE2";
 const rose = "#DB979C";
 const wine = "#4E1A12";
 
+// true on phone-sized screens
+function useNarrow(maxWidth = 480) {
+  const query = `(max-width: ${maxWidth}px)`;
+  const [narrow, setNarrow] = useState(
+    () => typeof window !== "undefined" && window.matchMedia(query).matches
+  );
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const onChange = (e) => setNarrow(e.matches);
+    setNarrow(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, [query]);
+  return narrow;
+}
+
 // small header/footer cell: "From: Me", "Date: Now", ...
-function Cell({ label, script, divider }) {
+// divider: "side" = line on the left, "top" = line on top (used when cells stack)
+function Cell({ label, script, divider, narrow }) {
+  const dividerStyle =
+    divider === "side"
+      ? { borderLeft: `1px solid ${navy}` }
+      : divider === "top"
+      ? { borderTop: `1px solid ${navy}` }
+      : {};
   return (
     <div
       style={{
         display: "flex",
+        flexWrap: "wrap",
         alignItems: "baseline",
-        gap: 10,
-        padding: "9px 12px",
+        columnGap: 10,
+        rowGap: 2,
+        padding: narrow ? "8px 10px" : "9px 12px",
         minWidth: 0,
-        borderLeft: divider ? `1px solid ${navy}` : "none",
+        ...dividerStyle,
       }}
     >
       <span
@@ -53,7 +78,16 @@ function Cell({ label, script, divider }) {
       >
         {label}
       </span>
-      <span style={{ fontFamily: "'Dancing Script', cursive", fontSize: 23, fontWeight: 600, lineHeight: 1.1 }}>
+      <span
+        style={{
+          minWidth: 0,
+          fontFamily: "'Dancing Script', cursive",
+          fontSize: narrow ? 21 : 23,
+          fontWeight: 600,
+          lineHeight: 1.15,
+          overflowWrap: "anywhere",
+        }}
+      >
         {script}
       </span>
     </div>
@@ -66,6 +100,7 @@ export default function MyConfession() {
   const [showPS, setShowPS] = useState(false);
   const heartsRef = useRef(null);
   const cardRef = useRef(null);
+  const narrow = useNarrow();
 
   // load fonts (Poppins, Cormorant Garamond, Dancing Script)
   useEffect(() => {
@@ -128,7 +163,7 @@ export default function MyConfession() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "40px 20px",
+        padding: narrow ? "24px 12px" : "40px 20px",
         overflowX: "hidden",
         textAlign: "left",
         fontFamily: "'Poppins', sans-serif",
@@ -168,7 +203,7 @@ export default function MyConfession() {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            paddingTop: 90,
+            paddingTop: narrow ? 50 : 90,
           }}
         >
           <button
@@ -287,7 +322,7 @@ export default function MyConfession() {
               ))}
             </div>
 
-            <div style={{ padding: "28px 24px 26px" }}>
+            <div style={{ padding: narrow ? "22px 14px 20px" : "28px 24px 26px" }}>
               <h1
                 style={{
                   margin: "0 0 18px",
@@ -298,37 +333,38 @@ export default function MyConfession() {
                   letterSpacing: "-0.035em",
                 }}
               >
-                A Love Letter.
+                Confession Letter.
               </h1>
 
               {/* From / To */}
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
+                  gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
                   marginBottom: 16,
                   borderTop: `4px solid ${navy}`,
                   borderBottom: `1px solid ${navy}`,
                 }}
               >
-                <Cell label="From:" script={letter.from} />
-                <Cell label="To:" script={letter.to} divider />
+                <Cell label="From:" script={letter.from} narrow={narrow} />
+                <Cell label="To:" script={letter.to} divider="side" narrow={narrow} />
               </div>
 
               {/* letter box */}
               <div style={{ border: `1px solid ${navy}` }}>
-                <div style={{ display: "flow-root", padding: "19px 19px 16px" }}>
-                  {/* polaroid */}
+                <div style={{ display: "flow-root", padding: narrow ? "16px 14px 14px" : "19px 19px 16px" }}>
+                  {/* polaroid: floats beside the text on wide screens, sits centered above it on phones */}
                   <figure
                     style={{
                       position: "relative",
-                      float: "right",
-                      width: "40%",
-                      margin: "2px -3px 26px 14px",
+                      float: narrow ? "none" : "right",
+                      width: narrow ? "56%" : "40%",
+                      boxSizing: "border-box",
+                      margin: narrow ? "10px auto 34px" : "2px -3px 26px 14px",
                       padding: "6px 6px 24px",
                       background: "#fff",
                       boxShadow: "0 8px 18px rgba(36,55,104,0.25)",
-                      transform: "rotate(5deg)",
+                      transform: `rotate(${narrow ? 3 : 5}deg)`,
                     }}
                   >
                     <span
@@ -397,8 +433,9 @@ export default function MyConfession() {
                         fontSize: 14,
                         fontWeight: 300,
                         lineHeight: 1.85,
-                        textAlign: "justify",
-                        hyphens: "auto",
+                        textAlign: narrow ? "left" : "justify",
+                        hyphens: narrow ? "none" : "auto",
+                        overflowWrap: "break-word",
                         color: "#2a3a69",
                       }}
                     >
@@ -426,16 +463,24 @@ export default function MyConfession() {
                       {letter.signoff}
                     </p>
                     <p style={{ margin: 0, fontSize: 13, fontStyle: "italic", color: wine }}>{letter.name}</p>
-                    <p style={{ margin: 0, fontSize: 13, fontWeight: 600, letterSpacing: "0.05em", color: rose }}>
-                      
-                    </p>
                   </div>
                 </div>
 
-                {/* Date / Valid for */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderTop: `1px solid ${navy}` }}>
-                  <Cell label="Date:" script={letter.date} />
-                  <Cell label="Valid for:" script={letter.validFor} divider />
+                {/* Date / Valid for: stacks on phones so the long text never collides with its neighbour */}
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: narrow ? "minmax(0, 1fr)" : "minmax(0, 1fr) minmax(0, 1fr)",
+                    borderTop: `1px solid ${navy}`,
+                  }}
+                >
+                  <Cell label="Date:" script={letter.date} narrow={narrow} />
+                  <Cell
+                    label="Valid for:"
+                    script={letter.validFor}
+                    divider={narrow ? "top" : "side"}
+                    narrow={narrow}
+                  />
                 </div>
               </div>
 
